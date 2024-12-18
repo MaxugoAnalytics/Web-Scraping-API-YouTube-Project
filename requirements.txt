@@ -1,0 +1,6 @@
+Python
+Streamlit
+Plotly
+Pandas
+WordCloud
+gdown
