@@ -1,6 +1,6 @@
-Python
-Streamlit
-Plotly
-Pandas
-WordCloud
+streamlit
+plotly
+pandas
+wordcloud
 gdown
+
