@@ -11,8 +11,9 @@ output = 'data.csv'
 gdown.download(url, output, quiet=False)
 
 df = pd.read_csv(output)
+st.set_page_config(page_title="YouTube Video Performance Dashboard", layout="wide")
 
-# Custom CSS to make content full width
+# Custom CSS for styling
 st.markdown("""
     <style>
         .main {
@@ -23,120 +24,131 @@ st.markdown("""
             padding-top: 0;
             padding-bottom: 0;
         }
-        h1, h2, h3 {
+        h1 {
             text-align: center;
+            font-size: 2.5em;
+            color: white;
+            background-color: #FF0000;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .kpi-container {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .kpi {
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            width: 22%;
+            text-align: center;
+            background-color: #007BFF;  /* Blue background */
+            color: white;  /* White text */
         }
     </style>
 """, unsafe_allow_html=True)
-st.markdown('<div class="top-right"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" width="50" height="50"></div>', unsafe_allow_html=True)
 
-# Streamlit Title and Introduction
-st.title("YouTube Video Performance Dashboard")
-st.write("This dashboard provides insights into YouTube videos, including views, likes, comments, and more.")
+# Display YouTube logo on the top-right
+st.markdown("""
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px; margin-right: 20px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" alt="YouTube Logo" width="150" />
+    </div>
+""", unsafe_allow_html=True)
+
+# Dashboard Title below the logo with a blue background
+st.markdown("""
+    <h1 style="text-align: center; font-size: 1.8em; color: white; background-color: #007BFF; 
+    padding: 15px; border-radius: 10px; margin-top: 10px;">
+        YouTube Video Performance Dashboard by Maxwell Adigwe
+    </h1>
+""", unsafe_allow_html=True)
+
+
 
 # Sidebar filter for channel name with 'All' option
 channel_name = st.sidebar.selectbox("Select Channel", ["All"] + list(df['channelName'].unique()))
-if channel_name != "All":
-    filtered_data = df[df['channelName'] == channel_name]
-else:
-    filtered_data = df  # Show all channels when "All" is selected
+filtered_data = df if channel_name == "All" else df[df['channelName'] == channel_name]
 
-# Streamlit Header
-st.subheader(f"Data for {channel_name if channel_name != 'All' else 'All Channels'}")
-
-# KPI/Metrics
+# KPIs
 total_views = filtered_data['viewCount'].sum()
 total_likes = filtered_data['likeCount'].sum()
 total_comments = filtered_data['commentCount'].sum()
-total_videos = filtered_data.shape[0]  # Total number of videos
+total_videos = filtered_data.shape[0]
 
 # Display KPIs
 st.markdown(f"""
-    <div style="display: flex; justify-content: space-between; font-size: 18px;">
-        <div style="border: 2px solid #ccc; padding: 10px; border-radius: 5px; width: 22%; text-align: center;">
+    <div class="kpi-container">
+        <div class="kpi">
             <strong>Total Views:</strong><br> {total_views:,}
         </div>
-        <div style="border: 2px solid #ccc; padding: 10px; border-radius: 5px; width: 22%; text-align: center;">
+        <div class="kpi">
             <strong>Total Likes:</strong><br> {total_likes:,}
         </div>
-        <div style="border: 2px solid #ccc; padding: 10px; border-radius: 5px; width: 22%; text-align: center;">
+        <div class="kpi">
             <strong>Total Comments:</strong><br> {total_comments:,}
         </div>
-        <div style="border: 2px solid #ccc; padding: 10px; border-radius: 5px; width: 22%; text-align: center;">
+        <div class="kpi">
             <strong>Total Videos:</strong><br> {total_videos}
         </div>
     </div>
-    """, unsafe_allow_html=True)
-
+""", unsafe_allow_html=True)
 
 # 3x3 Grid Layout
 col1, col2, col3 = st.columns(3)
 
-# Row 1: Visualizations
+# Duration vs View Count
 with col1:
     st.subheader("Duration vs View Count")
-    duration_filter = st.selectbox("Select Duration Range", options=["All", "0-300", "301-600", "601-900", "901-1200", "1201+"], index=0)
-    if duration_filter == "All":
-        filtered_data_duration = filtered_data
-    elif duration_filter == "0-300":
-        filtered_data_duration = filtered_data[filtered_data['durationSecs'] <= 300]
-    elif duration_filter == "301-600":
-        filtered_data_duration = filtered_data[(filtered_data['durationSecs'] > 300) & (filtered_data['durationSecs'] <= 600)]
-    elif duration_filter == "601-900":
-        filtered_data_duration = filtered_data[(filtered_data['durationSecs'] > 600) & (filtered_data['durationSecs'] <= 900)]
-    elif duration_filter == "901-1200":
-        filtered_data_duration = filtered_data[(filtered_data['durationSecs'] > 900) & (filtered_data['durationSecs'] <= 1200)]
-    elif duration_filter == "1201+":
-        filtered_data_duration = filtered_data[filtered_data['durationSecs'] > 1200]
-
-    fig1 = px.scatter(filtered_data_duration, x='durationSecs', y='viewCount', title="Duration vs View Count", labels={"durationSecs": "Video Duration (seconds)", "viewCount": "View Count"})
+    fig1 = px.scatter(
+        filtered_data, 
+        x='durationSecs', 
+        y='viewCount', 
+        title="Duration vs View Count", 
+        labels={"durationSecs": "Video Duration (seconds)", "viewCount": "View Count"}
+    )
     st.plotly_chart(fig1)
 
+# Correlation Heatmap
 with col2:
     st.subheader("Correlation Heatmap")
-    correlation_filter = st.selectbox("Select Correlation Metric", options=["All", "viewCount", "likeCount", "commentCount", "durationSecs"], index=0)
-
-    if correlation_filter == "All":
-        correlation_data = filtered_data[['viewCount', 'likeCount', 'commentCount', 'durationSecs']]
-    else:
-        correlation_data = filtered_data[[correlation_filter]]
-
-    correlation = correlation_data.corr()
+    correlation = filtered_data[['viewCount', 'likeCount', 'commentCount', 'durationSecs']].corr()
     fig2 = px.imshow(correlation, text_auto=True, title="Correlation Heatmap")
     st.plotly_chart(fig2)
 
+# Total Views by Month
 with col3:
     st.subheader("Total Views by Month")
-    month_filter = st.selectbox("Select Month Range", options=["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"], index=0)
-
-    if month_filter != "All":
-        month_dict = {
-            "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6, "July": 7,
-            "August": 8, "September": 9, "October": 10, "November": 11, "December": 12
-        }
-        filtered_data_month = filtered_data[filtered_data['month'] == month_dict[month_filter]]
-    else:
-        filtered_data_month = filtered_data
-
-    monthly_views = filtered_data_month.groupby('month')['viewCount'].sum().reset_index()
+    monthly_views = filtered_data.groupby('month')['viewCount'].sum().reset_index()
     fig3 = px.bar(monthly_views, x='month', y='viewCount', title="Total Views by Month", labels={"month": "Month", "viewCount": "Total Views"})
     st.plotly_chart(fig3)
+
+# Additional sections can follow the same structure as above
+
+
 
 # Row 2: Visualizations
 col4, col5, col6 = st.columns(3)
 
 with col4:
-    st.subheader("Total Views by Day of the Week")
-    day_filter = st.selectbox("Select Day", options=["All", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], index=0)
-
-    if day_filter != "All":
-        filtered_data_day = filtered_data[filtered_data['day'] == day_filter]
-    else:
-        filtered_data_day = filtered_data
-
-    daily_views = filtered_data_day.groupby('day')['viewCount'].sum().reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']).reset_index()
-    fig4 = px.bar(daily_views, x='day', y='viewCount', title="Total Views by Day of the Week", labels={"day": "Day of the Week", "viewCount": "Total Views"})
+    st.subheader("Top 10 Most Viewed Videos")
+    
+    # Sorting by view count and selecting top 10
+    top_10_videos = filtered_data.sort_values('viewCount', ascending=False).head(10)
+    
+    # Assuming 'description' contains titles or video names
+    fig4 = px.bar(top_10_videos, x='description', y='viewCount', title="Top 10 Most Viewed Videos", labels={"description": "Video Description", "viewCount": "View Count"})
+    fig4.update_xaxes(tickangle=45, tickmode='array')  # Rotate labels for better visibility
     st.plotly_chart(fig4)
+
+
+
 
 with col5:
     st.subheader("Word Cloud for Video Descriptions")
@@ -212,5 +224,13 @@ with col8:
     st.plotly_chart(fig8)
 
 with col9:
-    # Placeholder for future visualizations or metrics
-    st.write("Future Visualization Placeholder")
+    st.subheader("Comments Distribution by Channel")
+    fig9 = px.box(
+        filtered_data,
+        x='channelName',
+        y='commentCount',
+        title="Comments Distribution by Channel",
+        labels={"channelName": "Channel Name", "commentCount": "Comment Count"},
+        color='channelName',
+    )
+    st.plotly_chart(fig9)
