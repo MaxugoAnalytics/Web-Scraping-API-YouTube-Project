@@ -50,10 +50,6 @@ The project is divided into several sections:
 
 If you'd like to contribute to this project, feel free to fork the repository, make your changes, and submit a pull request. Contributions, issues, and suggestions are welcome!
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Contact
 
 Maxwell Adigwe - [LinkedIn Profile](https://www.linkedin.com/in/maxwell-adigwe-7053a4312/)  
